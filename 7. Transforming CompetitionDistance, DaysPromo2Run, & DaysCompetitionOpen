@@ -21,72 +21,61 @@ FinalTrain$CompetitionDistanceOneDiv <- (1/FinalTrain$CompetitionDistanceOneDiv)
 str(FinalTrain)
 summary(FinalTrain)
 #plot
-#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #x^-0.5
 FinalTrain$CompetitionDistanceOneDiv05 <- FinalTrain$CompetitionDistance
 str(FinalTrain)
 #x^-0.5 transform for slope
-FinalTrain$CompetitionDistanceOneDiv05
-    <- (1/(sqrt(FinalTrain$CompetitionDistanceOneDiv05)))
+FinalTrain$CompetitionDistanceOneDiv05<- (1/(sqrt(FinalTrain$CompetitionDistanceOneDiv05)))
 str(FinalTrain)
 summary(FinalTrain)
 #plot
-#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv05, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv05, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #x^-0.3
-FinalTrain$CompetitionDistanceOneDiv03
-    <- FinalTrain$CompetitionDistance
+FinalTrain$CompetitionDistanceOneDiv03 <- FinalTrain$CompetitionDistance
 str(FinalTrain)
 #x^-0.3 transform for slope
 FinalTrain$CompetitionDistanceOneDiv03<- (1/((FinalTrain$CompetitionDistanceOneDiv03)^0.3))
 str(FinalTrain)
 summary(FinalTrain)
 #plot
-#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv03, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv03, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #x^-0.25
 FinalTrain$CompetitionDistanceOneDiv025 <- FinalTrain$CompetitionDistance
 str(FinalTrain)
 #x^-0.25 transform for slope
-FinalTrain$CompetitionDistanceOneDiv025
-    <-  (1/((FinalTrain$CompetitionDistanceOneDiv025)^0.25))
+FinalTrain$CompetitionDistanceOneDiv025<-  (1/((FinalTrain$CompetitionDistanceOneDiv025)^0.25))
 str(FinalTrain)
 summary(FinalTrain)
 #plot
-#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv025, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv025, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #x^-0.2
 FinalTrain$CompetitionDistanceOneDiv02 <- FinalTrain$CompetitionDistance
 str(FinalTrain)
 #x^-0.2 transform for slope
-FinalTrain$CompetitionDistanceOneDiv02
-    <-  (1/((FinalTrain$CompetitionDistanceOneDiv02)^0.2))
+FinalTrain$CompetitionDistanceOneDiv02<-  (1/((FinalTrain$CompetitionDistanceOneDiv02)^0.2))
 str(FinalTrain)
 summary(FinalTrain)
 #plot
-#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv02, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv02, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #x^-0.1
 FinalTrain$CompetitionDistanceOneDiv01 <- FinalTrain$CompetitionDistance
 str(FinalTrain)
-#x^-0.1 transform for slope
-FinalTrain$CompetitionDistanceOneDiv01
-    <-  (1/((FinalTrain$CompetitionDistanceOneDiv01)^0.1))
+#x^-0.05 transform for slope
+FinalTrain$CompetitionDistanceOneDiv01<-  (1/((FinalTrain$CompetitionDistanceOneDiv01)^0.1))
 str(FinalTrain)
 summary(FinalTrain)
 #plot
-#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv01, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv01, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 
@@ -99,29 +88,25 @@ summary(FinalTrain)
 FinalTrain$PromoLogOne <- FinalTrain$DaysPromo2Run
 FinalTrain$PromoLogOne <- log10(FinalTrain$PromoLogOne + 1)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = PromoLogOne, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = PromoLogOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #log(x+2)
 FinalTrain$PromoLogTwo <- FinalTrain$DaysPromo2Run
 FinalTrain$PromoLogTwo <- log10(FinalTrain$PromoLogTwo + 2)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = PromoLogTwo, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = PromoLogTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #ln(x+1)
 FinalTrain$PromoLnOne <- FinalTrain$DaysPromo2Run
 FinalTrain$PromoLnOne <- log(FinalTrain$PromoLnOne + 1)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = PromoLnOne, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = PromoLnOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #ln(x+2)
 FinalTrain$PromoLnTwo <- FinalTrain$DaysPromo2Run
 FinalTrain$PromoLnTwo <- log(FinalTrain$PromoLnTwo + 2)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = PromoLnTwo, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = PromoLnTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #consider decrease in sales the longer promotion has been run
@@ -130,24 +115,21 @@ str(FinalTrain)
 FinalTrain$DecPromoLnOne <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoLnOne <- (1/(log(FinalTrain$DecPromoLnOne + 1.1)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoLnOne, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoLnOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/ln(x+1.5)
 FinalTrain$DecPromoLnOne5 <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoLnOne5 <- (1/(log(FinalTrain$DecPromoLnOne5 + 1.5)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoLnOne5, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoLnOne5, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/ln(x+2)
 FinalTrain$DecPromoLnTwo <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoLnTwo <- (1/(log(FinalTrain$DecPromoLnTwo + 2)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoLnTwo, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoLnTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 
@@ -155,24 +137,21 @@ str(FinalTrain)
 FinalTrain$DecPromoLogOne <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoLogOne <- (1/(log10(FinalTrain$DecPromoLogOne + 1.1)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoLogOne, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoLogOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/log(x+1.5)
 FinalTrain$DecPromoLogOne5 <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoLogOne5 <- (1/(log10(FinalTrain$DecPromoLogOne5 + 1.5)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoLogOne5, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoLogOne5, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/log(x+2)
 FinalTrain$DecPromoLogTwo <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoLogTwo <- (1/(log10(FinalTrain$DecPromoLogTwo + 2)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoLogTwo, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoLogTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 
@@ -180,8 +159,7 @@ str(FinalTrain)
 FinalTrain$DecPromoOne <- FinalTrain$DaysPromo2Run
 FinalTrain$DecPromoOne <- (1/(FinalTrain$DecPromoOne + 1))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecPromoOne, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecPromoOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 
@@ -194,29 +172,25 @@ str(FinalTrain)
 FinalTrain$CompLogOne <- FinalTrain$DaysCompetitionOpen
 FinalTrain$CompLogOne <- log10(FinalTrain$CompLogOne + 1)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = CompLogOne, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompLogOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #log(x+2)
 FinalTrain$CompLogTwo <- FinalTrain$DaysCompetitionOpen
 FinalTrain$CompLogTwo <- log10(FinalTrain$CompLogTwo + 2)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = CompLogTwo, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompLogTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #ln(x+1)
 FinalTrain$CompLnOne <- FinalTrain$DaysCompetitionOpen
 FinalTrain$CompLnOne <- log(FinalTrain$CompLnOne + 1)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = CompLnOne, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompLnOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #ln(x+2)
 FinalTrain$CompLnTwo <- FinalTrain$DaysCompetitionOpen
 FinalTrain$CompLnTwo <- log(FinalTrain$CompLnTwo + 2)
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = CompLnTwo, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = CompLnTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #consider decrease in sales the longer promotion has been run
@@ -225,24 +199,21 @@ str(FinalTrain)
 FinalTrain$DecCompLnOne <- FinalTrain$DaysCompetitionOpen
 FinalTrain$DecCompLnOne <- (1/(log(FinalTrain$DecCompLnOne + 1.1)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecCompLnOne, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecCompLnOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/ln(x+1.5)
 FinalTrain$DecCompLnOne5 <- FinalTrain$DaysCompetitionOpen
 FinalTrain$DecCompLnOne5 <- (1/(log(FinalTrain$DecCompLnOne5 + 1.5)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecCompLnOne5, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecCompLnOne5, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/ln(x+2)
 FinalTrain$DecCompLnTwo <- FinalTrain$DaysCompetitionOpen
 FinalTrain$DecCompLnTwo <- (1/(log(FinalTrain$DecCompLnTwo + 2)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecCompLnTwo, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecCompLnTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 
@@ -250,24 +221,21 @@ str(FinalTrain)
 FinalTrain$DecCompLogOne <- FinalTrain$DaysCompetitionOpen
 FinalTrain$DecCompLogOne <- (1/(log10(FinalTrain$DecCompLogOne + 1.1)))
 str(FinalTrain)
-ggplot(data = FinalTrain, aes(x = DecCompLogOne, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+ggplot(data = FinalTrain, aes(x = DecCompLogOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/log(x+1.5)
 FinalTrain$DecCompLogOne5 <- FinalTrain$DaysCompetitionOpen
 FinalTrain$DecCompLogOne5 <- (1/(log10(FinalTrain$DecCompLogOne5 + 1.5)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecCompLogOne5, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecCompLogOne5, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 #1/log(x+2)
 FinalTrain$DecCompLogTwo <- FinalTrain$DaysCompetitionOpen
 FinalTrain$DecCompLogTwo <- (1/(log10(FinalTrain$DecCompLogTwo + 2)))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecCompLogTwo, y = Sales))
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecCompLogTwo, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 
 
@@ -275,8 +243,7 @@ str(FinalTrain)
 FinalTrain$DecCompOne <- FinalTrain$DaysPromo2Run
 FinalTrain$DecCompOne <- (1/(FinalTrain$DecCompOne + 1))
 str(FinalTrain)
-#ggplot(data = FinalTrain, aes(x = DecCompOne, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+#ggplot(data = FinalTrain, aes(x = DecCompOne, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 
 #---------------------------------------------------------
 #Save File with all
