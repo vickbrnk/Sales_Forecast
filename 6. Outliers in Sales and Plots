@@ -15,8 +15,7 @@ iqr <- IQR(FinalOpenExp$Sales)
 up <-  Q[2]+1.5*iqr # Upper Range  
 low<- Q[1]-1.5*iqr
 
-eliminatedOutliersSales <- subset(FinalOpenExp, FinalOpenExp$Sales
-    > (Q[1] - 1.5*iqr) & FinalOpenExp$Sales < (Q[2]+1.5*iqr))
+eliminatedOutliersSales <- subset(FinalOpenExp, FinalOpenExp$Sales > (Q[1] - 1.5*iqr) & FinalOpenExp$Sales < (Q[2]+1.5*iqr))
 
 str(eliminatedOutliersSales)
 #811408 observations
@@ -27,8 +26,7 @@ str(eliminatedOutliersSales)
 #---------------------------------------------------------
 eliminatedOutliersSales$CurrentYear 
     <- as.factor(eliminatedOutliersSales$CurrentYear)
-ggplot(data = eliminatedOutliersSales, aes(x = CurrentYear, y = Sales)) 
-    +geom_boxplot(color = "skyblue3")
+ggplot(data = eliminatedOutliersSales, aes(x = CurrentYear, y = Sales)) +geom_boxplot(color = "skyblue3")
 
 #get medians for each
 gr2013 <- eliminatedOutliersSales[eliminatedOutliersSales$CurrentYear == "2013",]
@@ -45,16 +43,14 @@ median(gr2015$Sales)
 #---------------------------------------------------------
 eliminatedOutliersSales$CurrentMonth 
     <- as.factor(eliminatedOutliersSales$CurrentMonth)
-ggplot(data = eliminatedOutliersSales, aes(x = CurrentMonth, y = Sales))
-    +geom_boxplot(color = "skyblue3")
+ggplot(data = eliminatedOutliersSales, aes(x = CurrentMonth, y = Sales)) +geom_boxplot(color = "skyblue3")
 
 #---------------------------------------------------------
 #Explore StoreType
 #---------------------------------------------------------
 
 eliminatedOutliersSales$StoreType <- as.factor(eliminatedOutliersSales$StoreType)
-ggplot(data = eliminatedOutliersSales, aes(x = StoreType, y = Sales)) 
-    +geom_boxplot(color = "skyblue3")
+ggplot(data = eliminatedOutliersSales, aes(x = StoreType, y = Sales))  +geom_boxplot(color = "skyblue3")
 
 
 #---------------------------------------------------------
@@ -66,8 +62,7 @@ str(eliminatedOutliersSales)
 #""                 "Jan,Apr,Jul,Oct"  "Feb,May,Aug,Nov"  "Mar,Jun,Sept,Dec"
 eliminatedOutliersSales$PromoInterval 
     <- as.factor(eliminatedOutliersSales$PromoInterval)
-ggplot(data = eliminatedOutliersSales, aes(x = PromoInterval, y = Sales)) 
-    +geom_boxplot(color = "skyblue3")
+ggplot(data = eliminatedOutliersSales, aes(x = PromoInterval, y = Sales))  +geom_boxplot(color = "skyblue3")
 
 #---------------------------------------------------------
 #Save new version
