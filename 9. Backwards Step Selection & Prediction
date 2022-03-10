@@ -1,0 +1,134 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+library(ggstatsplot)
+library(caret)
+library(olsrr)
+Train2 <- read.csv("Train.csv")
+Train <- select(Train2, -c(X))
+
+summary(Train)
+str(Train)
+
+Train$DayOfWeek <- as.factor(Train$DayOfWeek) 
+Train$CurrentMonth <- as.factor(Train$CurrentMonth) 
+Train$StoreType <- as.factor(Train$StoreType) 
+Train$Assortment <- as.factor(Train$Assortment) 
+Train$CompetitionOpenSinceYear <- as.factor(Train$CompetitionOpenSinceYear) 
+Train$PromoInterval <- as.factor(Train$PromoInterval) 
+Train$Promo2 <- as.factor(Train$Promo2) 
+Train$Promo <- as.factor(Train$Promo) 
+Train$StateHoliday <- as.factor(Train$StateHoliday) 
+Train$SchoolHoliday <- as.factor(Train$SchoolHoliday) 
+Train$CurrentMonth <- as.factor(Train$CurrentMonth) 
+Train$CurrentYear <- as.factor(Train$CurrentYear) 
+str(Train)
+#caret
+#backwards step selection
+model<- lm(Sales~., data = Train)
+
+BWDfit.aic <- ols_step_backward_aic(model, details = TRUE)
+
+#summary each step
+BWDfit.aic
+#plot
+plot(FINALMODEL)
+
+#finalmodel
+FINALMODEL <- BWDfit.aic$model
+
+#test model on validation 
+Valid2 <- read.csv("Validation.csv")
+#remove variables that removed
+Valid <- select(Valid2, -c(X,DecPromoLnOne,CompLogOne,PromoLnOne,PromoLnTwo,
+    DecPromoLogOne5,DecPromoLogTwo,CompLnTwo,DecCompLnOne,DecCompLnOne5,DecCompLnTwo,
+        DecCompLogOne,DecCompLogOne5,DecCompLogTwo))
+#check variables
+str(Valid)
+# encode variables
+Valid$DayOfWeek <- as.factor(Valid$DayOfWeek) 
+Valid$CurrentMonth <- as.factor(Valid$CurrentMonth) 
+Valid$StoreType <- as.factor(Valid$StoreType) 
+Valid$Assortment <- as.factor(Valid$Assortment) 
+Valid$CompetitionOpenSinceYear <- as.factor(Valid$CompetitionOpenSinceYear) 
+Valid$PromoInterval <- as.factor(Valid$PromoInterval) 
+Valid$Promo2 <- as.factor(Valid$Promo2) 
+Valid$Promo <- as.factor(Valid$Promo) 
+Valid$StateHoliday <- as.factor(Valid$StateHoliday) 
+Valid$SchoolHoliday <- as.factor(Valid$SchoolHoliday) 
+Valid$CurrentMonth <- as.factor(Valid$CurrentMonth) 
+Valid$CurrentYear <- as.factor(Valid$CurrentYear)
+
+str(Valid)
+# turn warning off
+options(warn=-1)  #turn off warnings
+Valid$SalesPrediction <- predict(FINALMODEL, Valid)
+summary(Valid)
+# save the results!
+write.csv(Valid, file = "ValidationWithPrediction.csv")
+options(warn=1)      #turn warnings back on
+#Root Mean Square Percentage Error of Validation set
+CopyValid <- Valid
+str(CopyValid)
+
+CopyValid$RMSPE <- ((CopyValid$Sales - CopyValid$SalesPrediction)/CopyValid$Sales)^2
+str(CopyValid)
+TOTALRMSPE <- (1/162282)*(sum(CopyValid$RMSPE))
+TOTALRMSPE2 <- sqrt(TOTALRMSPE)
+
+#plot!
+library(reshape2)
+PlotValid <- select(CopyValid, c(Sales,SalesPrediction,DaysofData))
+satMelt <- melt(PlotValid , "DaysofData")
+
+# Plot
+ggplot(satMelt, aes(DaysofData, value, color = variable)) +
+  geom_point()
+
+#Compare Means and Median
+CompareRes <- select(Valid, c(SalesPrediction,Sales))
+summary(CompareRes)
+
+#PREDICT THE SALES NOW ON TEST
+FINALTEST <- read.csv("111TESTDONEREADYTOGO.csv")
+str(FINALTEST)
+summary(FINALTEST)
+#remove variables that removed
+Testing <- select(FINALTEST, -c(X,Store,Customers,Sales,Date,DecPromoLnOne,CompLogOne,
+    PromoLnOne,PromoLnTwo,DecPromoLogOne5,DecPromoLogTwo,CompLnTwo,DecCompLnOne,
+        DecCompLnOne5,DecCompLnTwo,DecCompLogOne,DecCompLogOne5,DecCompLogTwo))
+str(Testing)
+summary(Testing)
+#encode categorical!
+Testing$DayOfWeek <- as.factor(Testing$DayOfWeek) 
+Testing$CurrentMonth <- as.factor(Testing$CurrentMonth) 
+Testing$StoreType <- as.factor(Testing$StoreType) 
+Testing$Assortment <- as.factor(Testing$Assortment) 
+Testing$CompetitionOpenSinceYear <- as.factor(Testing$CompetitionOpenSinceYear) 
+Testing$PromoInterval <- as.factor(Testing$PromoInterval) 
+Testing$Promo2 <- as.factor(Testing$Promo2) 
+Testing$Promo <- as.factor(Testing$Promo) 
+Testing$StateHoliday <- as.factor(Testing$StateHoliday) 
+Testing$SchoolHoliday <- as.factor(Testing$SchoolHoliday) 
+Testing$CurrentMonth <- as.factor(Testing$CurrentMonth) 
+Testing$CurrentYear <- as.factor(Testing$CurrentYear)
+
+str(Testing)
+summary(Testing)
+#Predict
+# turn warning off
+options(warn=-1)  #turn off warnings
+Testing$SalesPrediction <- predict(FINALMODEL, Testing)
+summary(Testing)
+# save the results!
+write.csv(Testing, file = "PredictedTest.csv")
+options(warn=1)      #turn warnings back on
+
+# Plot Sales!
+ggplot(data = Testing, aes(x = DaysofData, y = SalesPrediction)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+ggplot(data = Testing, aes(x = DayOfWeek, y = SalesPrediction))
+    + geom_bar(stat="identity",alpha = 0.1, color = "skyblue3")
