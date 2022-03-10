@@ -1,0 +1,97 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+Closedstore2 <- read.csv("TrainClosedStoresVB.csv")
+Closedstore <- select(Closedstore2, -c(X))
+
+summary(Closedstore)
+# exploring of data
+describe(Closedstore)
+str(Closedstore)
+
+# how many stores in dataset
+numofStores <- length(unique(Closedstore$Store))
+
+# check which columns have NA data
+names(which(colSums(is.na(Closedstore)) > 0))
+#"CompetitionDistance", "CompetitionOpenSinceMonth", "CompetitionOpenSinceYear",  
+#"Promo2SinceWeek","Promo2SinceYear"  
+
+# check NA data numbers per column
+sapply(Closedstore , function(x) sum(is.na(x)))
+
+# set date to date
+dates <- as.Date(Closedstore$Date,"%d/%m/%Y")
+str(Closedstore)
+
+# no duplicates
+sum(duplicated(Closedstore))
+
+# explore the columns with NA values
+
+# CompetitionDistance
+sum(is.na(Closedstore$CompetitionDistance))
+noCompDistance <- Closedstore[is.na(Closedstore$CompetitionDistance),]
+noCompDistStores <- unique(noCompDistance$Store)
+# 456 observations, 3 stores which are [291, 622, 879]
+# either no competition or missing data
+
+#CompetitionOpenSinceMonth
+sum(is.na(Closedstore$CompetitionOpenSinceMonth))
+noCompDistanceS <- Closedstore[is.na(Closedstore$CompetitionOpenSinceMonth),]
+noCompDistStoresSin <- unique(noCompDistanceS$Store)
+noCompDistStoresSinCount <- length(noCompDistStoresSin)
+# 54,729 observations of 351 stores (354 in open)
+
+#CompetitionOpenSinceYear
+sum(is.na(Closedstore$CompetitionOpenSinceYear))
+noCompDistanceSY <- Closedstore[is.na(Closedstore$CompetitionOpenSinceYear),]
+noCompDistStoresSinY <- unique(noCompDistanceSY$Store)
+noCompDistStoresSinCountY <- length(noCompDistStoresSinY)
+# 54,729 observations of 351 stores (354 in open)
+
+#see if Year and Month are the same rows missing values
+all_equal(noCompDistanceSY,noCompDistanceS)
+#True
+all(noCompDistanceSY %in% noCompDistanceS)
+#True
+all(noCompDistanceS %in% noCompDistanceSY)
+#True
+
+#Promo2SinceWeek 
+sum(is.na(Closedstore$Promo2SinceWeek))
+noPromoWeek <- Closedstore[is.na(Closedstore$Promo2SinceWeek),]
+noPromoWeekStores <- unique(noPromoWeek$Store)
+noPromoWeekStoresCount <- length(noPromoWeekStores)
+#84,724 Observations of 536 stores (544 in open)
+
+#Promo2SinceYear
+sum(is.na(Closedstore$Promo2SinceYear))
+noPromoYear <- Closedstore[is.na(Closedstore$Promo2SinceYear),]
+noPromoYearStores <- unique(noPromoWeek$Store)
+noPromoYearStoresCount <- length(noPromoYearStores)
+#84,724 observations of 536 stores
+
+#see if week and year are the same rows missing values
+all(noPromoYear %in% noPromoWeek)
+#True
+all(noPromoWeek %in% noPromoYear)
+#True
+
+# Find how many stores do 0 promo
+noPromo <- Closedstore[Closedstore$Promo == 0,]
+noPromocount <- count(noPromo, "Store")
+StoresnoPromo <- length(unique(noPromo$Store))
+# 161,633 instances of no promo recorded, of 1,105 different stores
+
+# Find how many 0 sales
+noSales <- Closedstore[Closedstore$Sales == 0,]
+noSalescount <- count(noSales, "Store")
+StoresnoSales <- length(unique(noSales$Store))
+# 172,817 instances recorded, of 1,105 different stores (so all have 0 sales)
+
+yesSales <- Closedstore[Closedstore$Sales > 0,]
+yesSalescount <- count(yesSales, "Store")
+StoresyesSales <- length(unique(yesSales$Store))
+# 0 instances recorded, of 0 different stores so none made sales
