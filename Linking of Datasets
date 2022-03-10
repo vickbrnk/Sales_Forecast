@@ -1,0 +1,29 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+test <- read.csv("test.csv")
+store <- read.csv("store.csv")
+train <- read.csv("train.csv")
+# check data
+head(store)
+head(train)
+summary(store)
+summary(train)
+# merging on the "store" column
+storetrain <- merge(x = store, y = train, by= "Store", all.y = TRUE)
+# check type of data
+str(storetrain)
+# check for duplicates
+sum(duplicated(storetrain))
+#gives 0
+# Saving the merged version
+write.csv(storetrain, file = "MergedVB.csv")
+# Split of data for open and closed stores
+Open <- storetrain[storetrain$Open == 1,]
+OpenCount <- count(Open, "Store")
+Closed <- storetrain[storetrain$Open == 0,]
+ClosedCount <- count(Closed, "Store")
+#Create csv files for closed and open
+write.csv(Open, file = "TrainOpenStoresVB.csv")
+write.csv(Closed, file = "TrainClosedStoresVB.csv")
