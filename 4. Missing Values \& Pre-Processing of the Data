@@ -1,1 +1,227 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+Openstore4 <- read.csv("TrainOpenStoresVB.csv")
+FinalTrain <- select(Openstore4, -c(X))
+
+str(FinalTrain)
+# check for any NA
+sapply(FinalTrain , function(x) sum(is.na(x)))
+
+#--------------------------------------------------------
+#add date as a text column
+#--------------------------------------------------------
+FinalTrain$DateTxt = FinalTrain$Date
+summar(FinalTrain)
+str(FinalTrain)
+#--------------------------------------------------------
+#NA in CompetitionDistance
+#--------------------------------------------------------
+
+#drop missing observations of CompetitionDistance that belong to stores 291, 622, 879
+#drop stores 291, 622, 879, since they give the 2,186 missing observations
+FinalTrain <- FinalTrain[!(FinalTrain$Store==291|FinalTrain$Store==622|
+    FinalTrain$Store==879),]
+sapply(FinalTrain , function(x) sum(is.na(x)))
+str(FinalTrain)
+#CompDistance NA are gone, observations are now 842,206
+sapply(FinalTrain , function(x) sum(is.na(x)))
+#842,206 obs of 18 variables
+
+# Saving the version with dropped stores
+write.csv(FinalTrain, file = "FinalTraid1CD.csv")
+
+#--------------------------------------------------------
+#NowPromo2Adjustments
+#--------------------------------------------------------
+
+#remove the NA from the Promo2 data for now to create days that Promo2 has bene run
+noNApromo <- FinalTrain[!is.na(FinalTrain$Promo2SinceYear),]
+
+# merge the week and year into a date format
+# new column for this date
+noNApromo['Promo2SinceDate'] <- NA
+#create baseline for each year
+noNApromo['Promo2SinceDate'] <- as.Date(paste(noNApromo$Promo2SinceYear, 
+    noNApromo$Promo2SinceWeek, 1, sep="/"), "%Y/%U/%u")
+str(noNApromo)
+#421,085 obs.
+summary(noNApromo)
+
+# set date to date
+noNApromo$Date <- as.Date(noNApromo$Date,"%d/%m/%Y")
+str(noNApromo)
+
+# New variable for days since Promo2 started being run by the stores
+noNApromo['DaysPromo2Run'] <- NA
+noNApromo['DaysPromo2Run'] <-difftime(noNApromo$Date,noNApromo$Promo2SinceDate, 
+    units = "days") 
+#convert to numeric
+noNApromo['DaysPromo2Run']  <- as.numeric(noNApromo$DaysPromo2Run)
+summary(noNApromo)
+str(noNApromo)
+# check which promos negative, this means the promo was run after the date and set
+#these to 0
+min(noNApromo$DaysPromo2Run)
+max(noNApromo$DaysPromo2Run)
+
+negativePromodays <- noNApromo[noNApromo['DaysPromo2Run'] < 0, ]
+summary(negativePromodays)
+str(negativePromodays)
+#58229 obs
+#set these values to zero
+negativePromodays['DaysPromo2Run'] <- 0
+summary(negativePromodays)
+str(negativePromodays)
+#merge positive and negative back together, so select subset where promodays 
+#were positiv or zero
+positivePromodays <- noNApromo[noNApromo['DaysPromo2Run'] >= 0, ]
+str(positivePromodays)
+summary(positivePromodays)
+#362,234 obs.
+#combine back 
+str(positivePromodays)
+str(negativePromodays)
+NoNApromoFix <- rbind(positivePromodays,negativePromodays)
+str(NoNApromoFix)
+summary(NoNApromoFix)
+# check for any NA
+sapply(NoNApromoFix , function(x) sum(is.na(x)))
+
+#merge no NA for Promo back with fixed NA for promo
+yesNApromo <- FinalTrain[is.na(FinalTrain$Promo2SinceYear),]
+yesNApromo['DaysPromo2Run'] <- NA
+#DaysPromo2Run will be 0 in the new FinalTrain instead of NA
+yesNApromo$DaysPromo2Run[is.na(yesNApromo$DaysPromo2Run)] <- 0
+summary(yesNApromo)
+
+str(yesNApromo)
+#421,743 obs
+str(NoNApromoFix)
+#420,463 obs
+#to merge remove Promo2SinceDate from both
+NoNApromoFix <- select(NoNApromoFix, -c(Promo2SinceDate))
+str(yesNApromo)
+#421,743 obs
+str(noNApromo)
+#420,463 obs
+#now merge these two and order by date
+FinalTrain2 <- rbind(yesNApromo,NoNApromoFix)
+summary(FinalTrain2)
+str(FinalTrain2)
+#842,206 obs. + check NA
+sapply(FinalTrain2 , function(x) sum(is.na(x)))
+
+
+#--------------------------------------------------------
+#remove Promo2SinceWeek and Promo2SinceYear to get rid of NA values in the dataset
+#--------------------------------------------------------
+FinalTrain3 <- select(FinalTrain2, -c(Promo2SinceWeek,Promo2SinceYear))
+sapply(FinalTrain3 , function(x) sum(is.na(x)))
+
+#drop initial Date column
+FinalTrain4 <- select(FinalTrain3, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain4$Date = FinalTrain4$DateTxt
+summary(FinalTrain4)
+str(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain4, file = "FinalTraid1CD2Promo.csv")
+
+#--------------------------------------------------------
+#NA in CompetitionOpenSinceMonth and CompetitionOpenSinceYear
+#-------------------------------------------------------
+
+#remove the NA from the Competition data for now to get median
+noNAComp <- FinalTrain4[!is.na(FinalTrain4$CompetitionOpenSinceMonth),]
+summary(noNAComp)
+#median month is 8 and median of year is 2010, with mean is 7.225 and 2009 
+#respectively
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+summary(FinalTrain4)
+#impute median values
+FinalTrain4$CompetitionOpenSinceMonth[is.na(FinalTrain4$CompetitionOpenSinceMonth)]
+    <- median(noNAComp$CompetitionOpenSinceMonth, na.rm=TRUE)
+FinalTrain4$CompetitionOpenSinceYear[is.na(FinalTrain4$CompetitionOpenSinceYear)] 
+    <- median(noNAComp$CompetitionOpenSinceYear, na.rm=TRUE)
+summary(FinalTrain4)
+#median month is 8 and median of year is 2010, with mean is 7.47 and 2009 
+#respectively (slight increase for month)
+# check if missing values gone
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+#they are.
+
+# merge the month and year into a date format
+# new column for this date
+FinalTrain4['CompSinceDate'] <- NA
+
+#create baseline for each comp, assuming the first of the month to be the opening day
+FinalTrain4['CompSinceDate'] <- as.Date(paste(FinalTrain4$CompetitionOpenSinceYear, 
+    FinalTrain4$CompetitionOpenSinceMonth, 1, sep="/"), "%Y/%m/%d")
+
+
+# set date to date
+FinalTrain4$Date <- as.Date(FinalTrain4$Date,"%d/%m/%Y")
+str(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+# New variable for days since CompetitionOpened
+FinalTrain4['DaysCompetitionOpen'] <- NA
+FinalTrain4['DaysCompetitionOpen'] 
+    <-difftime(FinalTrain4$Date, FinalTrain4$CompSinceDate, units = "days") 
+FinalTrain4['DaysCompetitionOpen'] 
+    <- as.numeric(FinalTrain4$DaysCompetitionOpen)
+str(FinalTrain4)
+
+summary(FinalTrain4)
+# min of -941 and 420,463 days of max
+#find the negative values which indicate that competition was opened at a later date 
+#and set to 0
+negativeCompdays <- FinalTrain4[FinalTrain4['DaysCompetitionOpen'] < 0, ]
+summary(negativeCompdays)
+str(negativeCompdays)
+#70,108 obs
+
+#set these values to zero
+negativeCompdays['DaysCompetitionOpen'] <- 0
+summary(negativeCompdays)
+str(negativeCompdays)
+
+#merge positive and negative back together, so select subset where promodays 
+#were positiv or zero
+positiveCompdays <- FinalTrain4[FinalTrain4['DaysCompetitionOpen'] >= 0, ]
+str(positiveCompdays)
+summary(positiveCompdays)
+#774,284 obs.
+#combine back 
+str(positiveCompdays)
+str(negativeCompdays)
+NoCompFix <- rbind(negativeCompdays,positiveCompdays)
+str(NoCompFix)
+summary(NoCompFix)
+#844392 obs.
+# check for any NA
+sapply(NoCompFix , function(x) sum(is.na(x)))
+
+
+#--------------------------------------------------------
+#NA and Date correction
+#-------------------------------------------------------
+
+#drop initial Date column
+FinalTrain5 <- select(NoCompFix, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain5$Date = FinalTrain5$DateTxt
+summary(FinalTrain5)
+str(FinalTrain5)
+sapply(FinalTrain5 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain5, file = "FinalTraid1CD2Promo3Comp.csv")
+\end{verbatim}
+
 
