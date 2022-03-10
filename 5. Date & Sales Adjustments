@@ -1,0 +1,149 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+Openstore4 <- read.csv("FinalTraid1CD2Promo3Comp.csv")
+FinalTrain <- select(Openstore4, -c(X,CompSinceDate, Open))
+
+#plot customers and sales
+plot(FinalTrain$Customers, FinalTrain$Sales, 'xlab'= 'Customers', 'ylab' = 'Sales')
+ggplot(data = FinalTrain, aes(x = Customers, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+cor(FinalTrain$Customers, FinalTrain$Sales)
+cor.test(FinalTrain$Customers, FinalTrain$Sales)
+# gives a coefficient of 0.82 so highly correlated, p-value < 2.2e-16, 
+# sales dependent on customers
+sapply(FinalTrain , function(x) sum(is.na(x)))
+
+#drop initial Date column
+FinalTrain2 <- select(FinalTrain, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain2$Date = FinalTrain2$DateTxt
+summary(FinalTrain2)
+str(FinalTrain2)
+sapply(FinalTrain2 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+#add months and year variables
+#---------------------------------------------------------
+
+#create month with just the month of the date
+FinalTrain2['CurrentMonth'] <- NA
+FinalTrain2$CurrentMonth <- FinalTrain2$Date
+FinalTrain2$CurrentMonth <- format(as.Date(FinalTrain2$CurrentMonth), "%m")
+#check if succesful
+length(unique(FinalTrain2$CurrentMonth))
+# 12 values
+summary(FinalTrain2)
+sapply(FinalTrain2 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+#Date Adjustments
+#---------------------------------------------------------
+#drop initial Date column
+FinalTrain3 <- select(FinalTrain2, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain3$Date = FinalTrain3$DateTxt
+summary(FinalTrain3)
+str(FinalTrain3)
+sapply(FinalTrain3 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+#create year with just the year of the date
+FinalTrain3['CurrentYear'] <- NA
+FinalTrain3$CurrentYear <- as.Date(FinalTrain3$Date,"%d/%m/%Y")
+FinalTrain3$CurrentYear <- format(FinalTrain3$CurrentYear, "%Y")
+#check if succesful
+length(unique(FinalTrain3$CurrentYear))
+# 3 values
+summary(FinalTrain3)
+sapply(FinalTrain3 , function(x) sum(is.na(x)))
+str(FinalTrain3)
+#set both Year and Month to categorical
+
+#---------------------------------------------------------
+#Date Adjustments
+#---------------------------------------------------------
+#drop initial Date column
+FinalTrain4 <- select(FinalTrain3, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain4$Date = FinalTrain4$DateTxt
+summary(FinalTrain4)
+str(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+
+#correct date
+FinalTrain4$Date <- as.Date(FinalTrain4$Date,"%d/%m/%Y")
+str(FinalTrain4)
+#create continuous days variable for dataset from start on 01/01/2013
+FinalTrain4['StartDateData'] <- NA
+FinalTrain4$StartDateData <- as.Date("01JAN2013", "%d%b%Y")
+summary(FinalTrain4)
+str(FinalTrain4)
+
+FinalTrain4['DaysofData'] <- NA
+FinalTrain4['DaysofData'] <-difftime(FinalTrain4$Date,FinalTrain4$StartDateData, 
+    units = "days") 
+FinalTrain4['DaysofData']  <- as.numeric(FinalTrain4$DaysofData)
+
+str(FinalTrain4)
+summary(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain4, file = "FinalTraidAddPrepNEW.csv")
+#---------------------------------------------------------
+#Remove DateTxt, StartDateData
+#---------------------------------------------------------
+#drop initial Date column
+FinalTrain5 <- select(FinalTrain4, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain5$Date = FinalTrain5$DateTxt
+summary(FinalTrain5)
+str(FinalTrain5)
+sapply(FinalTrain5 , function(x) sum(is.na(x)))
+
+FinalTrain6 <- select(FinalTrain5, -c(StartDateData,DateTxt))
+summary(FinalTrain6)
+str(FinalTrain6)
+sapply(FinalTrain6 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain6, file = "FinalTraidAddPrepNEWnodates.csv")
+
+#---------------------------------------------------------
+#Explore Sales
+#---------------------------------------------------------
+
+# Find how many 0 sales
+noSales <- FinalTrain6[FinalTrain6$Sales == 0,]
+noSalescount <- count(noSales, "Store")
+StoresnoSales <- length(unique(noSales$Store))
+# 54 instances recorded, of 41 different stores 
+
+#See if customers visited with no sales
+customersnoSales <- noSales[noSales$Customers != 0,]
+count(customersnoSales)
+unique(customersnoSales)
+# 2 instances
+# Stores 948 and 1100 had customers but no sales
+nocustomersnoSales <- noSales[noSales$Customers == 0,]
+nocustomersnoSalescount <- count(nocustomersnoSales, "Store")
+numberofstoresnocustomernosales <- length(unique(nocustomersnoSales$Store))
+# 52 observations, 40 unique stores sold 0 with no customers
+
+#remove 0 sales, # with 0 Sales removed, min is now 46 with a 6,960 mean
+# (6373 median) and 41,1551 max
+str(FinalTrain6)
+#842,206 obs of 17 var.
+FinalTrain7 <-FinalTrain6[!(FinalTrain6$Sales== 0),]
+str(FinalTrain7)
+summary(FinalTrain7)
+#842,152 obs of 17 var.
+
+write.csv(FinalTrain7, file = "FinalTraidAddPrepNo0Sales.csv")
