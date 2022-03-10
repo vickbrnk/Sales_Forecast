@@ -1,0 +1,33 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+library(ggstatsplot)
+library(caret)
+
+New <- read.csv("FINALNEW.csv")
+Data <- select(New, -c(X))
+
+summary(Data)
+str(Data)
+
+
+#Create Train and Validation before using on Test
+
+## 80% of the sample size
+smp_size <- floor(0.8 * nrow(Data))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(Data)), size = smp_size)
+
+Train <- Data[train_ind, ]
+str(Train)
+#649126 of 44 variables
+Validat <- Data[-train_ind, ]
+str(Validat)
+#162282 of 44 variables
+
+write.csv(Train, file = "Train.csv")
+write.csv(Validat, file = "Validation.csv")
