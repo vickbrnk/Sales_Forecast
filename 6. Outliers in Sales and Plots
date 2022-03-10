@@ -1,0 +1,76 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+library(ggstatsplot)
+FinalOpenExp <- read.csv("FinalTraidAddPrepNo0Sales.csv")
+
+str(FinalOpenExp)
+summary(FinalOpenExp)
+#842,152 observations
+
+Q <- quantile(FinalOpenExp$Sales, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(FinalOpenExp$Sales)
+up <-  Q[2]+1.5*iqr # Upper Range  
+low<- Q[1]-1.5*iqr
+
+eliminatedOutliersSales <- subset(FinalOpenExp, FinalOpenExp$Sales
+    > (Q[1] - 1.5*iqr) & FinalOpenExp$Sales < (Q[2]+1.5*iqr))
+
+str(eliminatedOutliersSales)
+#811408 observations
+#30744 outliers
+#3.65% are outliers
+#---------------------------------------------------------
+#Explore CurrentYear
+#---------------------------------------------------------
+eliminatedOutliersSales$CurrentYear 
+    <- as.factor(eliminatedOutliersSales$CurrentYear)
+ggplot(data = eliminatedOutliersSales, aes(x = CurrentYear, y = Sales)) 
+    +geom_boxplot(color = "skyblue3")
+
+#get medians for each
+gr2013 <- eliminatedOutliersSales[eliminatedOutliersSales$CurrentYear == "2013",]
+gr2014 <- eliminatedOutliersSales[eliminatedOutliersSales$CurrentYear == "2014",]
+gr2015 <- eliminatedOutliersSales[eliminatedOutliersSales$CurrentYear == "2015",]
+median(gr2013$Sales)
+# 6110
+median(gr2014$Sales)
+# 6309
+median(gr2015$Sales)
+# 6423
+#---------------------------------------------------------
+#Explore Months
+#---------------------------------------------------------
+eliminatedOutliersSales$CurrentMonth 
+    <- as.factor(eliminatedOutliersSales$CurrentMonth)
+ggplot(data = eliminatedOutliersSales, aes(x = CurrentMonth, y = Sales))
+    +geom_boxplot(color = "skyblue3")
+
+#---------------------------------------------------------
+#Explore StoreType
+#---------------------------------------------------------
+
+eliminatedOutliersSales$StoreType <- as.factor(eliminatedOutliersSales$StoreType)
+ggplot(data = eliminatedOutliersSales, aes(x = StoreType, y = Sales)) 
+    +geom_boxplot(color = "skyblue3")
+
+
+#---------------------------------------------------------
+#Explore PromoInterval
+#---------------------------------------------------------
+unique(eliminatedOutliersSales$PromoInterval)
+str(eliminatedOutliersSales)
+#811408 obs
+#""                 "Jan,Apr,Jul,Oct"  "Feb,May,Aug,Nov"  "Mar,Jun,Sept,Dec"
+eliminatedOutliersSales$PromoInterval 
+    <- as.factor(eliminatedOutliersSales$PromoInterval)
+ggplot(data = eliminatedOutliersSales, aes(x = PromoInterval, y = Sales)) 
+    +geom_boxplot(color = "skyblue3")
+
+#---------------------------------------------------------
+#Save new version
+#---------------------------------------------------------
+write.csv(eliminatedOutliersSales, file = "NOOUTLIERSNEW.csv")
+
