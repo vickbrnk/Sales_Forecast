@@ -1,0 +1,700 @@
+
+
+#---------------------------------------------------------
+#Merging Test File
+#---------------------------------------------------------
+
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+test <- read.csv("test.csv")
+store <- read.csv("store.csv")
+
+# merging on the "store" column
+storetest <- merge(x = store, y = test, by= "Store", all.y = TRUE)
+
+# check type of data
+str(storetest)
+
+# check for duplicates
+sum(duplicated(storetest))
+#gives 0
+
+# Saving the merged version
+write.csv(storetest, file = "MergedTestVB.csv")
+
+# Split of data for open and closed stores
+Open <- storetest[storetest$Open == 1,]
+OpenCount <- count(Open, "Store")
+
+Closed <- storetest[storetest$Open == 0,]
+ClosedCount <- count(Closed, "Store")
+
+#Create csv files for closed and open
+write.csv(Open, file = "TestOpenStoresVB.csv")
+write.csv(Closed, file = "TestClosedStoresVB.csv")
+
+
+#---------------------------------------------------------
+#Pre-Processing Test File
+#---------------------------------------------------------
+
+
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+Openstore4 <- read.csv("TestOpenStoresVB.csv")
+FinalTrain <- select(Openstore4, -c(X))
+
+str(FinalTrain)
+# 35,104 observations check for any NA
+sapply(FinalTrain , function(x) sum(is.na(x)))
+#which missing values
+NAexplore <- FinalTrain[is.na(FinalTrain$Store),]
+#these appear to be Missing Completely at Random
+NAomit<- FinalTrain[rowSums(is.na(FinalTrain)) != ncol(FinalTrain), ]
+str(NAomit)
+#35,093 observations 
+#which missing values left
+sapply(NAomit , function(x) sum(is.na(x)))
+
+#which missing values
+NACompetitionDist <- NAomit[is.na(NAomit$CompetitionDistance),]
+unique(NACompetitionDist$Store)
+# stores 622 879 missing values so omit
+
+#--------------------------------------------------------
+#add date as a text column
+#--------------------------------------------------------
+NAomit$DateTxt = NAomit$Date
+summar(NAomit)
+str(NAomit)
+#--------------------------------------------------------
+#NA in CompetitionDistance
+#--------------------------------------------------------
+
+#drop missing observations of CompetitionDistance that belong to stores 622, 879
+#drop stores 291, 622, 879, since they give the 2,186 missing observations
+NAomit <- NAomit[!(NAomit$Store==622|NAomit$Store==879),]
+sapply(NAomit , function(x) sum(is.na(x)))
+str(NAomit)
+#CompDistance NA are gone
+sapply(NAomit , function(x) sum(is.na(x)))
+#35,028 obs of 18 variables
+
+# Saving the version with dropped stores
+write.csv(NAomit, file = "TestNoStores.csv")
+
+#--------------------------------------------------------
+#NowPromo2Adjustments
+#--------------------------------------------------------
+
+#remove the NA from the Promo2 data for now to create days that Promo2 has been run
+noNApromo <- NAomit[!is.na(NAomit$Promo2SinceYear),]
+
+# merge the week and year into a date format
+# new column for this date
+noNApromo['Promo2SinceDate'] <- NA
+#create baseline for each year
+noNApromo['Promo2SinceDate'] <- as.Date(paste(noNApromo$Promo2SinceYear, 
+    noNApromo$Promo2SinceWeek, 1, sep="/"), "%Y/%U/%u")
+str(noNApromo)
+#20,255 obs.
+summary(noNApromo)
+
+# set date to date
+noNApromo$Date <- as.Date(noNApromo$Date,"%d/%m/%Y")
+str(noNApromo)
+
+# New variable for days since Promo2 started being run by the stores
+noNApromo['DaysPromo2Run'] <- NA
+noNApromo['DaysPromo2Run'] <-difftime(noNApromo$Date,noNApromo$Promo2SinceDate,
+    units = "days") 
+#convert to numeric
+noNApromo['DaysPromo2Run']  <- as.numeric(noNApromo$DaysPromo2Run)
+summary(noNApromo)
+str(noNApromo)
+# check which promos negative, this means the promo was run after the date 
+# and set these to 0
+min(noNApromo$DaysPromo2Run)
+max(noNApromo$DaysPromo2Run)
+
+negativePromodays <- noNApromo[noNApromo['DaysPromo2Run'] < 0, ]
+summary(negativePromodays)
+str(negativePromodays)
+#0 obs
+#set these values to zero
+negativePromodays['DaysPromo2Run'] <- 0
+summary(negativePromodays)
+str(negativePromodays)
+#merge positive and negative back together, so select subset where 
+# promodays were positiv or zero
+positivePromodays <- noNApromo[noNApromo['DaysPromo2Run'] >= 0, ]
+str(positivePromodays)
+summary(positivePromodays)
+#20,255 obs.
+#combine back 
+str(positivePromodays)
+str(negativePromodays)
+NoNApromoFix <- rbind(positivePromodays,negativePromodays)
+str(NoNApromoFix)
+summary(NoNApromoFix)
+# check for any NA
+sapply(NoNApromoFix , function(x) sum(is.na(x)))
+
+#merge no NA for Promo back with fixed NA for promo
+yesNApromo <- NAomit[is.na(NAomit$Promo2SinceYear),]
+yesNApromo['DaysPromo2Run'] <- NA
+#DaysPromo2Run will be 0 in the new NAomit instead of NA
+yesNApromo$DaysPromo2Run[is.na(yesNApromo$DaysPromo2Run)] <- 0
+summary(yesNApromo)
+
+str(yesNApromo)
+#14,773 obs
+str(NoNApromoFix)
+#20,255 obs
+#to merge remove Promo2SinceDate from both
+NoNApromoFix <- select(NoNApromoFix, -c(Promo2SinceDate))
+str(yesNApromo)
+#14,773 obs
+str(noNApromo)
+#20,255 obs
+#now merge these two and order by date
+FinalTrain2 <- rbind(yesNApromo,NoNApromoFix)
+summary(FinalTrain2)
+str(FinalTrain2)
+#35,028 obs. + check NA
+sapply(FinalTrain2 , function(x) sum(is.na(x)))
+
+
+
+#--------------------------------------------------------
+#remove Promo2SinceWeek and Promo2SinceYear to get rid of NA values in the dataset
+#--------------------------------------------------------
+FinalTrain3 <- select(FinalTrain2, -c(Promo2SinceWeek,Promo2SinceYear))
+sapply(FinalTrain3 , function(x) sum(is.na(x)))
+
+#drop initial Date column
+FinalTrain4 <- select(FinalTrain3, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain4$Date = FinalTrain4$DateTxt
+summary(FinalTrain4)
+str(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain4, file = "TestPromoWeekStep.csv")
+
+#--------------------------------------------------------
+#NA in CompetitionOpenSinceMonth and CompetitionOpenSinceYear
+#-------------------------------------------------------
+
+#remove the NA from the Competition data for now to get median
+noNAComp <- FinalTrain4[!is.na(FinalTrain4$CompetitionOpenSinceMonth),]
+summary(noNAComp)
+#median month is 8 and median of year is 2010, with mean is 7.225 and
+# 2009 respectively
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+summary(FinalTrain4)
+#impute median values
+FinalTrain4$CompetitionOpenSinceMonth[is.na(FinalTrain4$CompetitionOpenSinceMonth)]
+    <- median(noNAComp$CompetitionOpenSinceMonth, na.rm=TRUE)
+FinalTrain4$CompetitionOpenSinceYear[is.na(FinalTrain4$CompetitionOpenSinceYear)]
+    <- median(noNAComp$CompetitionOpenSinceYear, na.rm=TRUE)
+summary(FinalTrain4)
+#median month is 8 and median of year is 2010, with mean is 7.47 and 2009 respectively (slight increase for month)
+# check if missing values gone
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+#they are.
+
+# merge the month and year into a date format
+# new column for this date
+FinalTrain4['CompSinceDate'] <- NA
+
+#create baseline for each comp, assuming the first of the month to be the opening day
+FinalTrain4['CompSinceDate'] <- as.Date(paste(FinalTrain4$CompetitionOpenSinceYear,
+    FinalTrain4$CompetitionOpenSinceMonth, 1, sep="/"), "%Y/%m/%d")
+
+
+# set date to date
+FinalTrain4$Date <- as.Date(FinalTrain4$Date,"%d/%m/%Y")
+str(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+# New variable for days since CompetitionOpened
+FinalTrain4['DaysCompetitionOpen'] <- NA
+FinalTrain4['DaysCompetitionOpen'] 
+    <-difftime(FinalTrain4$Date, FinalTrain4$CompSinceDate, units = "days") 
+FinalTrain4['DaysCompetitionOpen']  <- as.numeric(FinalTrain4$DaysCompetitionOpen)
+str(FinalTrain4)
+
+summary(FinalTrain4)
+
+#find the negative values which indicate that competition was opened at
+# a later date and set to 0
+negativeCompdays <- FinalTrain4[FinalTrain4['DaysCompetitionOpen'] < 0, ]
+summary(negativeCompdays)
+str(negativeCompdays)
+
+
+#set these values to zero
+negativeCompdays['DaysCompetitionOpen'] <- 0
+summary(negativeCompdays)
+str(negativeCompdays)
+
+#merge positive and negative back together, so select subset where promodays
+# were positiv or zero
+positiveCompdays <- FinalTrain4[FinalTrain4['DaysCompetitionOpen'] >= 0, ]
+str(positiveCompdays)
+summary(positiveCompdays)
+
+#combine back 
+str(positiveCompdays)
+str(negativeCompdays)
+NoCompFix <- rbind(negativeCompdays,positiveCompdays)
+str(NoCompFix)
+summary(NoCompFix)
+
+# check for any NA
+sapply(NoCompFix , function(x) sum(is.na(x)))
+
+
+#--------------------------------------------------------
+#NA and Date correction
+#-------------------------------------------------------
+
+#drop initial Date column
+FinalTrain5 <- select(NoCompFix, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain5$Date = FinalTrain5$DateTxt
+summary(FinalTrain5)
+str(FinalTrain5)
+sapply(FinalTrain5 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain5, file = "FinalTestDone.csv")
+
+
+
+#--------------------------------------------------------
+#Preparing Test File
+#-------------------------------------------------------
+
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+Openstore4 <- read.csv("FinalTestDone.csv")
+FinalTrain <- select(Openstore4, -c(X,CompSinceDate, Open))
+
+
+sapply(FinalTrain , function(x) sum(is.na(x)))
+
+#drop initial Date column
+FinalTrain2 <- select(FinalTrain, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain2$Date = FinalTrain2$DateTxt
+summary(FinalTrain2)
+str(FinalTrain2)
+sapply(FinalTrain2 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+#add months and year variables
+#---------------------------------------------------------
+
+#create month with just the month of the date
+FinalTrain2['CurrentMonth'] <- NA
+FinalTrain2$CurrentMonth <- FinalTrain2$Date
+FinalTrain2$CurrentMonth <- format(as.Date(FinalTrain2$CurrentMonth), "%m")
+#check if succesful
+length(unique(FinalTrain2$CurrentMonth))
+# 12 values
+summary(FinalTrain2)
+sapply(FinalTrain2 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+#Date Adjustments
+#---------------------------------------------------------
+#drop initial Date column
+FinalTrain3 <- select(FinalTrain2, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain3$Date = FinalTrain3$DateTxt
+summary(FinalTrain3)
+str(FinalTrain3)
+sapply(FinalTrain3 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+#create year with just the year of the date
+FinalTrain3['CurrentYear'] <- NA
+FinalTrain3$CurrentYear <- as.Date(FinalTrain3$Date,"%d/%m/%Y")
+FinalTrain3$CurrentYear <- format(FinalTrain3$CurrentYear, "%Y")
+#check if succesful
+length(unique(FinalTrain3$CurrentYear))
+# 3 values
+summary(FinalTrain3)
+sapply(FinalTrain3 , function(x) sum(is.na(x)))
+str(FinalTrain3)
+#set both Year and Month to categorical
+
+#---------------------------------------------------------
+#Date Adjustments
+#---------------------------------------------------------
+#drop initial Date column
+FinalTrain4 <- select(FinalTrain3, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain4$Date = FinalTrain4$DateTxt
+summary(FinalTrain4)
+str(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+#---------------------------------------------------------
+
+#correct date
+FinalTrain4$Date <- as.Date(FinalTrain4$Date,"%d/%m/%Y")
+str(FinalTrain4)
+#create continuous days variable for dataset from start on 01/01/2013
+FinalTrain4['StartDateData'] <- NA
+FinalTrain4$StartDateData <- as.Date("01JAN2013", "%d%b%Y")
+summary(FinalTrain4)
+str(FinalTrain4)
+
+FinalTrain4['DaysofData'] <- NA
+FinalTrain4['DaysofData'] <-difftime(FinalTrain4$Date,FinalTrain4$StartDateData,
+    units = "days") 
+FinalTrain4['DaysofData']  <- as.numeric(FinalTrain4$DaysofData)
+
+str(FinalTrain4)
+summary(FinalTrain4)
+sapply(FinalTrain4 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain4, file = "TestHasDates.csv")
+#---------------------------------------------------------
+#Remove DateTxt, StartDateData
+#---------------------------------------------------------
+#drop initial Date column
+FinalTrain5 <- select(FinalTrain4, -c(Date))
+
+#Copy Date Column to be Date
+FinalTrain5$Date = FinalTrain5$DateTxt
+summary(FinalTrain5)
+str(FinalTrain5)
+sapply(FinalTrain5 , function(x) sum(is.na(x)))
+
+FinalTrain6 <- select(FinalTrain5, -c(StartDateData,DateTxt))
+summary(FinalTrain6)
+str(FinalTrain6)
+sapply(FinalTrain6 , function(x) sum(is.na(x)))
+
+write.csv(FinalTrain6, file = "TestAlsoStartNow.csv")
+
+#---------------------------------------------------------
+#Explore Sales
+#---------------------------------------------------------
+summary(FinalTrain6)
+write.csv(FinalTrain6, file = "TESTREADYFORTRANSFORM.csv")
+
+
+
+#--------------------------------------------------------
+#Transforming Test File
+#-------------------------------------------------------
+
+
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+library(stringr)
+library(ggstatsplot)
+FinalTrain2 <- read.csv("TESTREADYFORTRANSFORM.csv")
+FinalTrain <- select(FinalTrain2, -c(X))
+str(FinalTrain)
+summary(FinalTrain)
+
+#---------------------------------------------------------
+#Explore & Transform CompetitionDistance
+#---------------------------------------------------------
+
+#x^-1
+FinalTrain$CompetitionDistanceOneDiv <- FinalTrain$CompetitionDistance
+str(FinalTrain)
+#x^-1 transform for slope
+FinalTrain$CompetitionDistanceOneDiv <- (1/FinalTrain$CompetitionDistanceOneDiv)
+str(FinalTrain)
+summary(FinalTrain)
+#plot
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#x^-0.5
+FinalTrain$CompetitionDistanceOneDiv05 <- FinalTrain$CompetitionDistance
+str(FinalTrain)
+#x^-0.5 transform for slope
+FinalTrain$CompetitionDistanceOneDiv05
+    <- (1/(sqrt(FinalTrain$CompetitionDistanceOneDiv05)))
+str(FinalTrain)
+summary(FinalTrain)
+#plot
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv05, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#x^-0.3
+FinalTrain$CompetitionDistanceOneDiv03 <- FinalTrain$CompetitionDistance
+str(FinalTrain)
+#x^-0.3 transform for slope
+FinalTrain$CompetitionDistanceOneDiv03
+    <- (1/((FinalTrain$CompetitionDistanceOneDiv03)^0.3))
+str(FinalTrain)
+summary(FinalTrain)
+#plot
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv03, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#x^-0.25
+FinalTrain$CompetitionDistanceOneDiv025 <- FinalTrain$CompetitionDistance
+str(FinalTrain)
+#x^-0.25 transform for slope
+FinalTrain$CompetitionDistanceOneDiv025
+    <-  (1/((FinalTrain$CompetitionDistanceOneDiv025)^0.25))
+str(FinalTrain)
+summary(FinalTrain)
+#plot
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv025, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#x^-0.2
+FinalTrain$CompetitionDistanceOneDiv02 <- FinalTrain$CompetitionDistance
+str(FinalTrain)
+#x^-0.2 transform for slope
+FinalTrain$CompetitionDistanceOneDiv02
+    <-  (1/((FinalTrain$CompetitionDistanceOneDiv02)^0.2))
+str(FinalTrain)
+summary(FinalTrain)
+#plot
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv02, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#x^-0.1
+FinalTrain$CompetitionDistanceOneDiv01 <- FinalTrain$CompetitionDistance
+str(FinalTrain)
+#x^-0.05 transform for slope
+FinalTrain$CompetitionDistanceOneDiv01
+    <-  (1/((FinalTrain$CompetitionDistanceOneDiv01)^0.1))
+str(FinalTrain)
+summary(FinalTrain)
+#plot
+#ggplot(data = FinalTrain, aes(x = CompetitionDistanceOneDiv01, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+
+#---------------------------------------------------------
+#Explore DaysPromo2Run
+#---------------------------------------------------------
+
+#consider increase in sales the longer promotion has been run
+#log(x+1)
+FinalTrain$PromoLogOne <- FinalTrain$DaysPromo2Run
+FinalTrain$PromoLogOne <- log10(FinalTrain$PromoLogOne + 1)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = PromoLogOne, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#log(x+2)
+FinalTrain$PromoLogTwo <- FinalTrain$DaysPromo2Run
+FinalTrain$PromoLogTwo <- log10(FinalTrain$PromoLogTwo + 2)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = PromoLogTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#ln(x+1)
+FinalTrain$PromoLnOne <- FinalTrain$DaysPromo2Run
+FinalTrain$PromoLnOne <- log(FinalTrain$PromoLnOne + 1)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = PromoLnOne, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#ln(x+2)
+FinalTrain$PromoLnTwo <- FinalTrain$DaysPromo2Run
+FinalTrain$PromoLnTwo <- log(FinalTrain$PromoLnTwo + 2)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = PromoLnTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#consider decrease in sales the longer promotion has been run
+
+#1/ln(x+1)
+FinalTrain$DecPromoLnOne <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoLnOne <- (1/(log(FinalTrain$DecPromoLnOne + 1.1)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoLnOne, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/ln(x+1.5)
+FinalTrain$DecPromoLnOne5 <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoLnOne5 <- (1/(log(FinalTrain$DecPromoLnOne5 + 1.5)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoLnOne5, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/ln(x+2)
+FinalTrain$DecPromoLnTwo <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoLnTwo <- (1/(log(FinalTrain$DecPromoLnTwo + 2)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoLnTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+
+#1/log(x+1)
+FinalTrain$DecPromoLogOne <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoLogOne <- (1/(log10(FinalTrain$DecPromoLogOne + 1.1)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoLogOne, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/log(x+1.5)
+FinalTrain$DecPromoLogOne5 <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoLogOne5 <- (1/(log10(FinalTrain$DecPromoLogOne5 + 1.5)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoLogOne5, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/log(x+2)
+FinalTrain$DecPromoLogTwo <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoLogTwo <- (1/(log10(FinalTrain$DecPromoLogTwo + 2)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoLogTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+
+#1/(x+1)
+FinalTrain$DecPromoOne <- FinalTrain$DaysPromo2Run
+FinalTrain$DecPromoOne <- (1/(FinalTrain$DecPromoOne + 1))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecPromoOne, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+
+#---------------------------------------------------------
+#Explore DaysCompetitionOpen
+#---------------------------------------------------------
+
+#consider increase in sales the longer promotion has been run
+#log(x+1)
+FinalTrain$CompLogOne <- FinalTrain$DaysCompetitionOpen
+FinalTrain$CompLogOne <- log10(FinalTrain$CompLogOne + 1)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = CompLogOne, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#log(x+2)
+FinalTrain$CompLogTwo <- FinalTrain$DaysCompetitionOpen
+FinalTrain$CompLogTwo <- log10(FinalTrain$CompLogTwo + 2)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = CompLogTwo, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#ln(x+1)
+FinalTrain$CompLnOne <- FinalTrain$DaysCompetitionOpen
+FinalTrain$CompLnOne <- log(FinalTrain$CompLnOne + 1)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = CompLnOne, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#ln(x+2)
+FinalTrain$CompLnTwo <- FinalTrain$DaysCompetitionOpen
+FinalTrain$CompLnTwo <- log(FinalTrain$CompLnTwo + 2)
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = CompLnTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#consider decrease in sales the longer promotion has been run
+
+#1/ln(x+1)
+FinalTrain$DecCompLnOne <- FinalTrain$DaysCompetitionOpen
+FinalTrain$DecCompLnOne <- (1/(log(FinalTrain$DecCompLnOne + 1.1)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecCompLnOne, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/ln(x+1.5)
+FinalTrain$DecCompLnOne5 <- FinalTrain$DaysCompetitionOpen
+FinalTrain$DecCompLnOne5 <- (1/(log(FinalTrain$DecCompLnOne5 + 1.5)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecCompLnOne5, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/ln(x+2)
+FinalTrain$DecCompLnTwo <- FinalTrain$DaysCompetitionOpen
+FinalTrain$DecCompLnTwo <- (1/(log(FinalTrain$DecCompLnTwo + 2)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecCompLnTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+
+#1/log(x+1)
+FinalTrain$DecCompLogOne <- FinalTrain$DaysCompetitionOpen
+FinalTrain$DecCompLogOne <- (1/(log10(FinalTrain$DecCompLogOne + 1.1)))
+str(FinalTrain)
+ggplot(data = FinalTrain, aes(x = DecCompLogOne, y = Sales)) 
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/log(x+1.5)
+FinalTrain$DecCompLogOne5 <- FinalTrain$DaysCompetitionOpen
+FinalTrain$DecCompLogOne5 <- (1/(log10(FinalTrain$DecCompLogOne5 + 1.5)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecCompLogOne5, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+#1/log(x+2)
+FinalTrain$DecCompLogTwo <- FinalTrain$DaysCompetitionOpen
+FinalTrain$DecCompLogTwo <- (1/(log10(FinalTrain$DecCompLogTwo + 2)))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecCompLogTwo, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+
+
+#1/(x+1)
+FinalTrain$DecCompOne <- FinalTrain$DaysPromo2Run
+FinalTrain$DecCompOne <- (1/(FinalTrain$DecCompOne + 1))
+str(FinalTrain)
+#ggplot(data = FinalTrain, aes(x = DecCompOne, y = Sales))
+    + geom_point(alpha = 0.1, color = "skyblue3")
+
+#---------------------------------------------------------
+#Save File with all
+#---------------------------------------------------------
+str(FinalTrain)
+summary(FinalTrain)
+write.csv(FinalTrain, file = "111TESTDONEREADYTOGO.csv")
+#The variables under go to infinity- corrected to be 1.1 instead of 1
+#DecPromoLogOne
+#DecPromoLnOne
+#DecCompLnOne
+#DecCompLogOne
