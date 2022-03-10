@@ -25,6 +25,10 @@ Train$SchoolHoliday <- as.factor(Train$SchoolHoliday)
 Train$CurrentMonth <- as.factor(Train$CurrentMonth) 
 Train$CurrentYear <- as.factor(Train$CurrentYear) 
 str(Train)
+
+
+
+
 #caret
 #backwards step selection
 model<- lm(Sales~., data = Train)
@@ -42,9 +46,7 @@ FINALMODEL <- BWDfit.aic$model
 #test model on validation 
 Valid2 <- read.csv("Validation.csv")
 #remove variables that removed
-Valid <- select(Valid2, -c(X,DecPromoLnOne,CompLogOne,PromoLnOne,PromoLnTwo,
-    DecPromoLogOne5,DecPromoLogTwo,CompLnTwo,DecCompLnOne,DecCompLnOne5,DecCompLnTwo,
-        DecCompLogOne,DecCompLogOne5,DecCompLogTwo))
+Valid <- select(Valid2, -c(X,DecPromoLnOne,CompLogOne,PromoLnOne,PromoLnTwo,DecPromoLogOne5,DecPromoLogTwo,CompLnTwo,DecCompLnOne,DecCompLnOne5,DecCompLnTwo,DecCompLogOne,DecCompLogOne5,DecCompLogTwo))
 #check variables
 str(Valid)
 # encode variables
@@ -96,9 +98,7 @@ FINALTEST <- read.csv("111TESTDONEREADYTOGO.csv")
 str(FINALTEST)
 summary(FINALTEST)
 #remove variables that removed
-Testing <- select(FINALTEST, -c(X,Store,Customers,Sales,Date,DecPromoLnOne,CompLogOne,
-    PromoLnOne,PromoLnTwo,DecPromoLogOne5,DecPromoLogTwo,CompLnTwo,DecCompLnOne,
-        DecCompLnOne5,DecCompLnTwo,DecCompLogOne,DecCompLogOne5,DecCompLogTwo))
+Testing <- select(FINALTEST, -c(X,Store,Customers,Sales,Date,DecPromoLnOne,CompLogOne,PromoLnOne,PromoLnTwo,DecPromoLogOne5,DecPromoLogTwo,CompLnTwo,DecCompLnOne,DecCompLnOne5,DecCompLnTwo,DecCompLogOne,DecCompLogOne5,DecCompLogTwo))
 str(Testing)
 summary(Testing)
 #encode categorical!
@@ -117,6 +117,9 @@ Testing$CurrentYear <- as.factor(Testing$CurrentYear)
 
 str(Testing)
 summary(Testing)
+Testing2 <- select(Testing, -c(SalesPrediction))
+str(Testing2)
+                                
 #Predict
 # turn warning off
 options(warn=-1)  #turn off warnings
@@ -127,8 +130,17 @@ write.csv(Testing, file = "PredictedTest.csv")
 options(warn=1)      #turn warnings back on
 
 # Plot Sales!
-ggplot(data = Testing, aes(x = DaysofData, y = SalesPrediction)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+ggplot(data = Testing, aes(x = DaysofData, y = SalesPrediction)) + geom_point(alpha = 0.1, color = "skyblue3")
 
-ggplot(data = Testing, aes(x = DayOfWeek, y = SalesPrediction))
-    + geom_bar(stat="identity",alpha = 0.1, color = "skyblue3")
+ggplot(data = Testing, aes(x = DayOfWeek, y = SalesPrediction)) + geom_bar(stat="identity",alpha = 0.1, color = "skyblue3")
+
+ggplot(data = Train, aes(x = DayOfWeek, y = Sales)) + geom_boxplot(,alpha = 0, color = "skyblue3")
+
+ggplot(data = Testing, aes(x = DayOfWeek, y = SalesPrediction)) + geom_boxplot(,alpha = 0, color = "skyblue3")
+
+ggplot(data = Train, aes(x = DayOfWeek, y = Sales)) + geom_bar(stat="identity",alpha = 0.1, color = "skyblue3")
+
+
+
+
+
