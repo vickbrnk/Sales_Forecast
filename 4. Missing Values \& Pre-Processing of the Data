@@ -222,6 +222,6 @@ str(FinalTrain5)
 sapply(FinalTrain5 , function(x) sum(is.na(x)))
 
 write.csv(FinalTrain5, file = "FinalTraid1CD2Promo3Comp.csv")
-\end{verbatim}
+
 
 
