@@ -1,0 +1,159 @@
+library(dplyr)
+library(tidyverse)
+library(mnormt)
+library(psych)
+Openstore3 <- read.csv("TrainOpenStoresVB.csv")
+Openstore <- select(Openstore3, -c(X))
+
+glimpse(Openstore)
+summary(Openstore)
+# exploring of data
+describe(Openstore)
+str(Openstore)
+
+# no duplicates
+sum(duplicated(Openstore))
+
+# how many stores in dataset
+numofStores <- length(unique(Openstore$Store))
+#1,115 stores with 844,392 obs.
+
+# check which columns have NA data
+names(which(colSums(is.na(Openstore)) > 0))
+#"CompetitionDistance", "CompetitionOpenSinceMonth", "CompetitionOpenSinceYear",  
+#"Promo2SinceWeek","Promo2SinceYear"  
+
+# check NA data numbers per column
+sapply(Openstore , function(x) sum(is.na(x)))
+
+#NA plot of missing values
+install.packages("VIM")
+library(VIM)
+mice_plot <- aggr(Openstore, col=c('navyblue','yellow'),
+                    numbers=TRUE, sortVars=TRUE,
+                    labels=names(Openstore), cex.axis=.7,
+                    gap=3, ylab=c("Missing data","Pattern"))
+
+
+# explore the columns with NA values
+
+# CompetitionDistance
+sum(is.na(Openstore$CompetitionDistance))
+noCompDistance <- Openstore[is.na(Openstore$CompetitionDistance),]
+noCompDistStores <- unique(noCompDistance$Store)
+# 2,186 observations, 3 stores which are [291, 622, 879]
+# either no competition or missing data
+
+#CompetitionOpenSinceMonth
+sum(is.na(Openstore$CompetitionOpenSinceMonth))
+noCompDistanceS <- Openstore[is.na(Openstore$CompetitionOpenSinceMonth),]
+noCompDistStoresSin <- unique(noCompDistanceS$Store)
+noCompDistStoresSinCount <- length(noCompDistStoresSin)
+# 268,619 observations of 354 stores
+
+#CompetitionOpenSinceYear
+sum(is.na(Openstore$CompetitionOpenSinceYear))
+noCompDistanceSY <- Openstore[is.na(Openstore$CompetitionOpenSinceYear),]
+noCompDistStoresSinY <- unique(noCompDistanceSY$Store)
+noCompDistStoresSinCountY <- length(noCompDistStoresSinY)
+# 268,619 observations of 354 stores
+
+#see if Year and Month are the same rows missing values
+all(noCompDistanceSY %in% noCompDistanceS)
+#True
+all(noCompDistanceS %in% noCompDistanceSY)
+#True
+
+#see if these CompetitionOpenSinceYear and Month store have CompetitionDistance 
+haveCompetitionDistance <- Openstore[!is.na(Openstore$CompetitionDistance),]
+#find which rows, and how many stores
+commondataComp <- inner_join(haveCompetitionDistance, noCompDistanceSY)
+#266,433 common observations (the difference is equal to the
+#stores that have missing NA for CompDist)
+storesnoCompDetCount <- unique(commondataComp$Store)
+noCompDetlength <- length(storesnoCompDetCount)
+#351 stores have CompetitionDistance but no details of month or year on Competition
+
+#Promo2SinceWeek 
+sum(is.na(Openstore$Promo2SinceWeek))
+noPromoWeek <- Openstore[is.na(Openstore$Promo2SinceWeek),]
+noPromoWeekStores <- unique(noPromoWeek$Store)
+noPromoWeekStoresCount <- length(noPromoWeekStores)
+#423,307 Observations of 544 stores
+
+#Promo2SinceYear
+sum(is.na(Openstore$Promo2SinceYear))
+noPromoYear <- Openstore[is.na(Openstore$Promo2SinceYear),]
+noPromoYearStores <- unique(noPromoWeek$Store)
+noPromoYearStoresCount <- length(noPromoYearStores)
+#423,307 observations of 544 stores
+
+#see if week and year are the same rows missing values
+all(noPromoYear %in% noPromoWeek)
+#True
+all(noPromoWeek %in% noPromoYear)
+#True
+
+# Find how many stores do 0 promo
+noPromo <- Openstore[Openstore$Promo == 0,]
+noPromocount <- count(noPromo, "Store")
+StoresnoPromo <- length(unique(noPromo$Store))
+# 467,496 instances of no promo recorded, of 1,115 different stores.
+#this means that all stores at some point did or did not run promo
+
+
+#See how many stores Promo2 not do
+noPromo2 <- Openstore[Openstore$Promo2 == 0,]
+noPromo2count <- count(noPromo2, "Store")
+numberofstoresPromo2 <- length(unique(noPromo2$Store))
+# 423,307 no Promo2 run, in 544 stores
+
+# See if missing values in Promo2weekand Year can be accounted for by promo 
+#not being run
+#see if no Promo2 match with no Promo2 week and year 
+all_equal(noPromoYear,noPromo2)
+#True
+all(noPromoWeek %in% noPromo2)
+#True
+#see if no Promo match with no Promo week and year 
+all(noPromo2 %in% noPromoYear)
+#True
+all(noPromo2 %in%  noPromoWeek)
+#True
+#They are!
+
+#See how many stores Promo2  do
+doPromo2 <- Openstore[Openstore$Promo2 == 1,]
+doPromo2count <- count(doPromo2, "Store")
+numberofstoresdoPromo2 <- length(unique(doPromo2$Store))
+# 421,085 do Promo2 run, in 571 stores
+
+#see if do Promo but NA in Year or Week
+any(doPromo2 %in% noPromoYear)
+#False
+any(doPromo2 %in%  noPromoWeek)
+#False
+#so all stores that did promo had more info about it in week and year
+
+# Check Number of observations of the stores with NA CompetitionDistance data
+no291 <- Openstore[Openstore$Store == 291,]
+no291count <- count(no291, "Store")
+#780 observations of 291
+
+no662 <- Openstore[Openstore$Store == 622,]
+no622count <- count(no662, "Store")
+#784 observations of 622
+
+no879 <- Openstore[Openstore$Store == 879,]
+no879count <- count(no879, "Store")
+#622 observations of 879
+# sum of these three gives 2,186 observations
+
+#Subset of the three and see if it is the same as the CompetitionDistance Subset
+stores_list <- list(no291, no662, no879)
+stores_list2 <- Reduce(function(x, y) merge(x, y, all=TRUE), stores_list, 
+    accumulate=FALSE)
+#see if equal
+all_equal(stores_list2,noCompDistance)
+#True
+
