@@ -8,12 +8,10 @@ FinalTrain <- select(Openstore4, -c(X,CompSinceDate, Open))
 
 #plot customers and sales
 plot(FinalTrain$Customers, FinalTrain$Sales, 'xlab'= 'Customers', 'ylab' = 'Sales')
-ggplot(data = FinalTrain, aes(x = Customers, y = Sales)) 
-    + geom_point(alpha = 0.1, color = "skyblue3")
+ggplot(data = FinalTrain, aes(x = Customers, y = Sales)) + geom_point(alpha = 0.1, color = "skyblue3")
 cor(FinalTrain$Customers, FinalTrain$Sales)
 cor.test(FinalTrain$Customers, FinalTrain$Sales)
-# gives a coefficient of 0.82 so highly correlated, p-value < 2.2e-16, 
-# sales dependent on customers
+# gives a coefficient of 0.82 so highly correlated, p-value < 2.2e-16, sales dependent on customers
 sapply(FinalTrain , function(x) sum(is.na(x)))
 
 #drop initial Date column
@@ -88,8 +86,7 @@ summary(FinalTrain4)
 str(FinalTrain4)
 
 FinalTrain4['DaysofData'] <- NA
-FinalTrain4['DaysofData'] <-difftime(FinalTrain4$Date,FinalTrain4$StartDateData, 
-    units = "days") 
+FinalTrain4['DaysofData'] <-difftime(FinalTrain4$Date,FinalTrain4$StartDateData, units = "days") 
 FinalTrain4['DaysofData']  <- as.numeric(FinalTrain4$DaysofData)
 
 str(FinalTrain4)
@@ -137,8 +134,7 @@ nocustomersnoSalescount <- count(nocustomersnoSales, "Store")
 numberofstoresnocustomernosales <- length(unique(nocustomersnoSales$Store))
 # 52 observations, 40 unique stores sold 0 with no customers
 
-#remove 0 sales, # with 0 Sales removed, min is now 46 with a 6,960 mean
-# (6373 median) and 41,1551 max
+#remove 0 sales, # with 0 Sales removed, min is now 46 with a 6,960 mean (6373 median) and 41,1551 max
 str(FinalTrain6)
 #842,206 obs of 17 var.
 FinalTrain7 <-FinalTrain6[!(FinalTrain6$Sales== 0),]
@@ -147,3 +143,4 @@ summary(FinalTrain7)
 #842,152 obs of 17 var.
 
 write.csv(FinalTrain7, file = "FinalTraidAddPrepNo0Sales.csv")
+
